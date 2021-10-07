@@ -36,7 +36,7 @@ class Doc
   Doc.fromObject(dynamic o) {
     this.id = o["id"];
     this.title = o["title"];
-    this.expiration = DateUtils.TrimDate(o["expiration"]);
+    this.expiration = DateUtilsDD.TrimDate(o["expiration"]);
 
     this.fqYear = o["fqYear"];
     this.fqHalfYear = o["fqHalfYear"];
