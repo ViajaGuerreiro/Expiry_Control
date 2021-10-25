@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ffi';
+import 'dart:html';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +14,7 @@ import '../util/utils.dart';
 import '../util/dbhelper.dart';
 
 const menuDelete = "Delete";
-final List<String> menuOptions = const <String> [menuDelete];
+final List<String> menuOptions = const <String>[menuDelete];
 
 class DocDetail extends StatefulWidget {
   Doc doc;
@@ -24,51 +26,120 @@ class DocDetail extends StatefulWidget {
   State<StatefulWidget> createState() => DocDetailState();
 }
 
-  class DocDetailState extends State<DocDetail> {
+class DocDetailState extends State<DocDetail> {
+  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
-    final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
-    final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  final int daysAhead = 5475;
 
-    final int daysAhead = 5475;
+  final TextEditingController titleCtrl = TextEditingController();
+  final TextEditingController expirationCtrl =
+      MaskedTextController(mask: '2000-00-00');
 
-    final TextEditingController titleCtrl = TextEditingController();
-    final TextEditingController expirationCtrl = MaskedTextController(mask: '2000-00-00');
+  bool fqYearCtrl = true;
+  bool fqHalfYearCtrl = true;
+  bool fqQuarterCtrl = true;
+  bool fqMonthCtrl = true;
+  bool fqLessMonthCtrl = true;
 
-    bool fqYearCtrl = true;
-    bool fqHalfYearCtrl = true;
-    bool fqQuarterCtrl = true;
-    bool fqMonthCtrl = true;
-    bool fqLessMonthCtrl = true;
+  @override
+  void initState() {
+    super.initState();
+    _initCtrls();
+  }
 
-    void _initCtrls() {
-      titleCtrl.text = widget.doc.title != null ? widget.doc.title : "";
+  void _initCtrls() {
+    titleCtrl.text = widget.doc.title != null ? widget.doc.title : "";
 
-      expirationCtrl.text = widget.doc.expiration != null ? widget.doc.expiration : "";
+    expirationCtrl.text =
+        widget.doc.expiration != null ? widget.doc.expiration : "";
 
-      fqYearCtrl = widget.doc.fqYear != null ? Val.IntToBool(widget.doc.fqYear) : false;
+    fqYearCtrl =
+        widget.doc.fqYear != null ? Val.IntToBool(widget.doc.fqYear) : false;
 
-      fqHalfYearCtrl = widget.doc.fqHalfYear != null ? Val.IntToBool(widget.doc.fqHalfYear) : false;
+    fqHalfYearCtrl = widget.doc.fqHalfYear != null
+        ? Val.IntToBool(widget.doc.fqHalfYear)
+        : false;
 
-      fqQuarterCtrl = widget.doc.fqQuarter != null ? Val.IntToBool(widget.doc.fqQuarter) : false;
+    fqQuarterCtrl = widget.doc.fqQuarter != null
+        ? Val.IntToBool(widget.doc.fqQuarter)
+        : false;
 
-      fqMonthCtrl = widget.doc.fqMonth != null ? Val.IntToBool(widget.doc.fqMonth) : false;
-    }
+    fqMonthCtrl =
+        widget.doc.fqMonth != null ? Val.IntToBool(widget.doc.fqMonth) : false;
+  }
 
-  Future _chooseDate (BuildContext context, String initialDateString) async {
+  Future _chooseDate(BuildContext context, String initialDateString) async {
     var now = new DateTime.now();
     var initialDate = DateUtilsDD.convertToDate(initialDateString) ?? now;
 
-    initialDate = (initialDate.year >= now.year && initialDate.isAfter(now) ? initialDate : now);
+    initialDate = (initialDate.year >= now.year && initialDate.isAfter(now)
+        ? initialDate
+        : now);
 
-    DatePicker.showDatePicker(context, showTitleActions: true, onConfirm: (date) {
+    DatePicker.showDatePicker(context, showTitleActions: true,
+        onConfirm: (date) {
       setState(() {
         DateTime dt = date;
 
         String r = DateUtilsDD.ftDateAsStr(dt);
         expirationCtrl.text = r;
       });
-    },
-    currentTime:  initialDate);
+    }, currentTime: initialDate);
   }
 
+  void _selectMenu(String value) async {
+    switch (value) {
+      case menuDelete:
+        if (widget.doc.id == -1) {
+          return;
+        }
+        await _deleteDoc(widget.doc.id);
+    }
   }
+
+  _deleteDoc(int id) async {
+    int? r = await widget.dbh.deleteDoc(widget.doc.id);
+    Navigator.pop(context, true);
+  }
+
+  void _saveDoc() {
+    widget.doc.title = titleCtrl.text;
+    widget.doc.expiration = expirationCtrl.text;
+    widget.doc.fqQuarter = Val.BoolToInt(fqHalfYearCtrl);
+    widget.doc.fqMonth = Val.BoolToInt(fqMonthCtrl);
+    widget.doc.fqHalfYear = Val.BoolToInt(fqHalfYearCtrl);
+    widget.doc.fqLessMonth = Val.BoolToInt(fqLessMonthCtrl);
+    widget.doc.fqYearMonth = Val.BoolToInt(fqYearCtrl);
+
+    if (widget.doc.id > -1) {
+      debugPrint("_update->Doc Id:" + widget.doc.id.toString());
+      widget.dbh.updateDoc(widget.doc);
+      Navigator.pop(context, true);
+    } else {
+      Future<int?> idd = widget.dbh.getMaxId();
+      idd.then((result) {
+        debugPrint("_insert->Doc Id:" + widget.doc.id.toString());
+        widget.doc.id = (result != null) ? result = 1 : 1;
+        widget.dbh.insertDoc(widget.doc);
+        Navigator.pop(context, true);
+      });
+    }
+  }
+
+  void _submitForm() {
+    final FormState? form = _formKey.currentState;
+
+    if (form!.validate()) {
+      _saveDoc();
+    } else {
+      showMessage('Some data is invalid. Please correct.');
+    }
+  }
+
+  void showMessage(String message, [MaterialColor color = Colors.red]) {
+    _scaffoldKey.currentState!.showSnackBar(
+        new SnackBar(backgroundColor: color,
+        content: new Text(message)));
+  }
+}

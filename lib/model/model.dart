@@ -1,19 +1,22 @@
 import '../util/utils.dart';
 
-class Doc
-{
+class Doc {
   int id = 0;
   String title = "";
   String expiration = "";
 
   int fqYear = 0;
   int fqHalfYear = 0;
-  int fqQuarter = 0; 
+  int fqQuarter = 0;
   int fqMonth = 0;
+  int fqLessMonth = 0;
+  int fqYearMonth = 0;
 
-  Doc(this.title, this.expiration, this.fqYear, this.fqHalfYear, this.fqQuarter, this.fqMonth);
+  Doc(this.title, this.expiration, this.fqYear, this.fqHalfYear, this.fqQuarter,
+      this.fqMonth);
 
-  Doc.withId(this.id, this.title, this.expiration, this.fqYear, this.fqHalfYear, this.fqQuarter, this.fqMonth);
+  Doc.withId(this.id, this.title, this.expiration, this.fqYear, this.fqHalfYear,
+      this.fqQuarter, this.fqMonth);
 
   Map<String, dynamic> toMap() {
     var map = Map<String, dynamic>();
