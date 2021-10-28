@@ -139,7 +139,129 @@ class DocDetailState extends State<DocDetail> {
 
   void showMessage(String message, [MaterialColor color = Colors.red]) {
     _scaffoldKey.currentState!.showSnackBar(
-        new SnackBar(backgroundColor: color,
-        content: new Text(message)));
+        new SnackBar(backgroundColor: color, content: new Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const String cStrDays = "Enter a number of days";
+    TextStyle? tStyle = Theme.of(context).textTheme.title;
+    String ttl = widget.doc.title;
+
+    return Scaffold(
+      key:  _scaffoldKey,
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title:  Text(ttl != "" ? widget.doc.title : "New Document"),
+        actions: (ttl == "") ? <Widget>[]: <Widget> [
+          PopupMenuButton(
+            onSelected: _selectMenu,
+            itemBuilder: (BuildContext context) {
+              return menuOptions.map((String choice) {
+                return PopupMenuItem <String>(
+                  value:  choice,
+                  child:  Text(choice),
+                );
+              }).toList();
+            },
+          ),
+        ]
+      ),
+    body: Form(
+      key:  _formKey,
+      autovalidate: true,
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          children: <Widget>[
+            TextFormField(
+              inputFormatters: [
+                WhitelistingTextInputFormatter(
+                  RegExp("[a-zA-Z0-9]"))
+              ],
+              controller: titleCtrl,
+              style: tStyle,
+            validator: (val) => Val.ValidateTitle(val!),
+              decoration: InputDecoration(
+                icon: const Icon(Icons.title),
+                hintText: 'Enter the document name',
+                labelText: 'Document Name',
+              ),
+            ),
+            Row(children: <Widget> [
+              Expanded(
+                child: TextFormField(
+                  controller: expirationCtrl,
+                  maxLength: 10,
+                  decoration: InputDecoration(
+                    icon: const Icon(Icons.calendar_today),
+                    hintText: 'Expiry date (i.e. ' +
+                    DateUtilsDD.daysAheadAsStr(daysAhead) + ')',
+                    labelText: 'Expiry Date'
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (val) => DateUtilsDD.isValidDate(val!)
+                    ? null : 'Not a valid future date',
+                )),
+              IconButton(
+                icon: new Icon(Icons.more_horiz),
+                tooltip: 'Choose date',
+                onPressed:  (() {
+                  _chooseDate(context, expirationCtrl.text);
+                }),
+              )
+            ]),
+            Row(children: <Widget> [
+              Expanded(child: Text('  ')),
+            ]),
+            Row(children: <Widget> [
+              Expanded(child: Text('a: Alert @ 1.5 & 1 year(s)')),
+              Switch(
+                value: fqYearCtrl, onChanged: (bool value) {
+                setState(() {
+                  fqYearCtrl = value;
+                });
+              }),
+            ]),
+            Row(children: <Widget>[
+              Expanded(child: Text('b: Alert @ 6 months')),
+              Switch(
+                value: fqHalfYearCtrl, onChanged: (bool value) {
+                  setState(() {
+                    fqHalfYearCtrl = value;
+                  });
+                }),
+            ]),
+            Row(children: <Widget>[
+              Expanded(child: Text('c: Alert @ 3 months')),
+              Switch(
+                value: fqQuarterCtrl, onChanged: (bool value) {
+                setState(() {
+                  fqQuarterCtrl = value;
+                });
+              }),
+            ]),
+            Row(children: <Widget> [
+              Expanded(child: Text('d: Alert @ 1 month or less')),
+              Switch(
+                  value: fqMonthCtrl, onChanged: (bool value) {
+                setState(() {
+                  fqMonthCtrl = value;
+                });
+              }),
+            ]),
+            Container(
+              padding: const EdgeInsets.only(
+                left: 40.0, top: 20.0),
+              child: RaisedButton(
+                  child: Text("Save"),
+                  onPressed: _submitForm,
+            )
+        ),
+          ],
+    ),
+    )));
   }
 }
