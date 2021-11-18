@@ -13,7 +13,7 @@ List<String> menuOptions = const <String> [
 ];
 
 class DocList extends StatefulWidget {
-  @override
+  
   State<StatefulWidget> createState() => DocListState();
 
 }
@@ -36,17 +36,19 @@ class DocListState extends State<DocList> {
         docsFuture.then(
           (result) {
             if(result.length >= 0) {
-              List <Doc> docList = List.filled(result.length, 0 );
+              //List<Doc> doclist = List<Doc>();
+              List<Doc> docList = [];
               var count = result.length;
-              for (int i = 0; i <= count - 1; i++)
-                docList.add(Doc.fromObject(result[i]));
-            }
-            setState(() {
+              for (int i = 0; i <= count - 1; i++){
+              docList.add(Doc.fromObject(result[i]));
+              }
+            
+              setState(() {
               if(this.docs.length > 0) {
                 this.docs.clear();
               }
 
-              this.docs = docList;
+              this.docs= docList;
 
               this.count = count;
             });
@@ -82,16 +84,16 @@ class DocListState extends State<DocList> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: new Text("Reset"),
-          content: new Text("Do you want to delete all local data?")
+          content: new Text("Do you want to delete all local data?"),
           actions: <Widget>[
-            FlatButton(
-              child: new Text("Cancel"),
+            TextButton(
+              child: new Text("Cancelar"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
 
-            FlatButton(
+            TextButton(
               child: new Text("OK"),
               onPressed: () {
                 Future f = _resetLocalData();
