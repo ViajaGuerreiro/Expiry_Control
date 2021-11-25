@@ -121,4 +121,89 @@ class DocListState extends State<DocList> {
       }
     );
   }
+
+  void _selectMenu(String value) async {
+    switch (value) {
+      case menuReset:
+        _showResetDialog();
+    }
+  }
+
+  ListView docListItems() {
+    return ListView.builder(
+      itemCount: count,
+      itemBuilder: (BuildContext context, int position) {
+        String dd = Val.GetExpiryStr(this.docs[position].expiration);
+        String dl = (dd != "1") ? "days left" : " day left";
+        return Card(
+          color: Colors.white,
+          elevation: 1.0,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: 
+                (Val.GetExpiryStr(this.docs[position].expiration) != "0") ? Colors.blue : Colors.red,
+                child: Text(
+                  this.docs[position].id.toString(),
+                ),
+            ),
+            title: Text(this.docs[position].title),
+            subtitle: Text(
+              Val.GetExpiryStr(this.docs[position].expiration) + dl + "\nExp: " + DateUtilsDD.convertToDateFull(
+                this.docs[position].expiration)),
+             onTap: () {
+                  navigateToDetail(this.docs[position]);
+                },
+              ),
+            );
+      },
+        );
+      }
+
+    @override
+    Widget build(BuildContext context) {
+      this.cDate = DateTime.now();
+
+      if (this.docs == null) {
+        List<Doc> doclist = [];
+        this.docs = doclist;
+        getData();
+      }
+
+      _checkDate();
+
+        return Scaffold(
+
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: Text("DocExpire"),
+        actions: <Widget>[
+          PopupMenuButton(
+            onSelected: _selectMenu,
+            itemBuilder: (BuildContext context) {
+              return menuOptions.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice),
+                );
+              }).toList();
+            },
+          )
+        ],
+      ),
+      body: Center(
+        child: Scaffold(
+          body: Stack(children: <Widget>[
+            docListItems(),
+          ]),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              navigateToDetail(Doc.withId(-1, "", "", 1, 1, 1, 1));
+            },
+            tooltip: "Add new doc",
+            child: Icon(Icons.add),
+          ),
+        ),
+      ),
+    );
+  }
 }

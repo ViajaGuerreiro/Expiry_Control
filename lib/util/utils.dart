@@ -44,6 +44,17 @@ class DateUtilsDD {
     }
   }
 
+  static String convertToDateFull(String input) {
+    try {
+      var d = new DateFormat("yyyy-MM-dd").parseStrict(input);
+      var formatter = new DateFormat('dd MM yyyy');
+      return formatter.format(d);
+    }
+    catch(e) {
+      return "";
+    }
+  }
+
   static String? convertToDateFullDt(DateTime input) {
     try
     {
